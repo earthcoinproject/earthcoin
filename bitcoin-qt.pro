@@ -4,6 +4,7 @@ macx:TARGET = "EarthCoin-Qt"
 VERSION = 1.3.0
 INCLUDEPATH += src src/json src/qt
 QT += core gui network
+QT += webkit
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
