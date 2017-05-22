@@ -34,6 +34,31 @@
     </widget>
    </item>
    <item>
+    <widget class="QWebView" name="webView">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>110</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:transparent;</string>
+     </property>
+     <property name="url">
+      <url>
+       <string>qrc:/html/res/html/twitter.html</string>
+      </url>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -343,6 +368,13 @@ background-repeat:no-repeat;</string>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QWebView</class>
+   <extends>QWidget</extends>
+   <header>QtWebKitWidgets/QWebView</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
