@@ -4,6 +4,12 @@ EarthCoin
 1.4.0 changes
 =============
 
+1.3.4 changes
+=============
+
+- Update Mainnet checkpoints up to block 1,410,000
+- Refresh pnSeed node list
+
 1.3.3 changes
 =============
 
