@@ -1830,7 +1830,8 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     // List of what to disconnect (typically nothing)
     vector<CBlockIndex*> vDisconnect;
     CBlockIndex* pindex = view.GetBestBlock();
-    CBlockIndex* pindexD;      // will be needed later --- attack prevention
+    CBlockIndex* pindexD = NULL;                     // will be needed later --- attack prevention
+    int64 blockTimeD = pindex->GetBlockTime();       // latest timestamp of disconected chain
     while (pindex != pfork)
     {
         vDisconnect.push_back(pindex);
@@ -1841,7 +1842,8 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
     // List of what to connect (typically only pindexNew)
     vector<CBlockIndex*> vConnect;
     pindex = pindexNew;
-    CBlockIndex* pindexC;     // will be needed later --- attack prevention
+    int64 blockTimeC = pindex->GetBlockTime();       // latest timestamp of conected chain
+    CBlockIndex* pindexC = NULL;                     // will be needed later --- attack prevention
     while (pindex != pfork)
     {
         vConnect.push_back(pindex);
@@ -1849,23 +1851,34 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         pindex = pindex->pprev;
     }
     reverse(vConnect.begin(), vConnect.end());
+    
+    int64 curTime = GetTime();                        // current system time, for an inactive fork detection
 
     if (vDisconnect.size() > 0) {
         printf("REORGANIZE: Disconnect %"PRIszu" blocks; %s..\n", vDisconnect.size(), pfork->GetBlockHash().ToString().c_str());
         printf("REORGANIZE: Connect %"PRIszu" blocks; ..%s\n", vConnect.size(), pindexNew->GetBlockHash().ToString().c_str());
-        if (pindexD->nHeight > 1589000) {            
+        if (pindexD->nHeight > 1589000) {
             // Large reorganize prevention --- never disconect any matured blocks
             if (vDisconnect.size() >= COINBASE_MATURITY) {
                 return error("SetBestChain() : too many blocks for disconect, reorganization prevented");
             }
-            // "Travel in time" prevention --- never replace confirmed block by too fresh one
-            if (pindexC->GetBlockTime() > pindexD->GetBlockTime() + 720) {
-            return error("SetBestChain() : too fresh block, reorganization prevented");
+            // A workaround for a dead fork recovery: 
+            // if the blockchain is inactive for more than 12 minutes and the concurent fork is active
+            // or blockchain is inactive for more than two hours
+            // then allow the forks switch
+            if ( ( ((curTime-blockTimeD) > 720 ) && ( (curTime-blockTimeD) > 4*(curTime-blockTimeC) ) ) || ( (curTime-blockTimeD) > 7200 ) )            // sando
+                printf("REORGANIZE: An inactive chain detected -> reaorganization passed");
+            // otherwise do not allow timestamp shifts greater than 12 minutes
+            else {
+                // "Travel in time" prevention --- never replace confirmed block by too fresh one
+                if (pindexC->GetBlockTime() > pindexD->GetBlockTime() + 720) {
+                    return error("SetBestChain() : too fresh block, reorganization prevented");
+                }
+                // "Travel in time" prevention --- never replace confirmed block by too old one
+                if (pindexC->GetBlockTime() < pindexD->pprev->GetBlockTime() - 720) {
+                    return error("SetBestChain() : too old block, reorganization prevented");
+                }
             }
-            // "Travel in time" prevention --- never replace confirmed block by too old one
-            if (pindexC->GetBlockTime() < pindexD->pprev->GetBlockTime() - 720) {
-                return error("SetBestChain() : too old block, reorganization prevented");
-            }                
         }
     }
 
@@ -2193,7 +2206,9 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
     }
 
     // Check timestamp
-    if (GetBlockTime() > GetAdjustedTime() + 720)
+    // Decrease the maximum allowed timestam shift from 12 to 6 minutes after Jan 1, 2019
+    int64 timeShiftAllowed = ( GetBlockTime() > 1546300800 ) ? 360 : 720;                 
+    if (GetBlockTime() > GetAdjustedTime() + timeShiftAllowed)
         return state.Invalid(error("CheckBlock() : block timestamp too far in the future"));
 
     // First transaction must be coinbase, the rest must not be
@@ -2258,9 +2273,14 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp)
         if (nBits != GetNextWorkRequired(pindexPrev, this))
             return state.DoS(100, error("AcceptBlock() : incorrect proof of work"));
 
-        // Check timestamp against prev
+        // Check timestamp against prev - median of 11 blocks
         if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
-            return state.Invalid(error("AcceptBlock() : block's timestamp is too early"));
+            return state.Invalid(error("AcceptBlock() : block's timestamp is too early against median"));
+        
+        // Check timestamp against the last block
+        // Since Jan 1, 2019, a new block must not be older than previous block minus 12 minutes
+        if ( (GetBlockTime() > 1546300800) && (GetBlockTime() < pindexPrev->GetBlockTime() - 720) )
+            return state.Invalid(error("AcceptBlock() : block's timestamp is too early against previous block"));
 
         // Check that all transactions are finalized
         BOOST_FOREACH(const CTransaction& tx, vtx)
