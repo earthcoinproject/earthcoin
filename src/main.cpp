@@ -1866,8 +1866,9 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
             // if the blockchain is inactive for more than 12 minutes and the concurent fork is active
             // or blockchain is inactive for more than two hours
             // then allow the forks switch
-            if ( ( ((curTime-blockTimeD) > 720 ) && ( (curTime-blockTimeD) > 4*(curTime-blockTimeC) ) ) || ( (curTime-blockTimeD) > 7200 ) )            // sando
-                printf("REORGANIZE: An inactive chain detected -> reaorganization passed");
+            if ( ( ((curTime-blockTimeD) > 720 ) && ( (curTime-blockTimeD) > 4*(curTime-blockTimeC) ) ) || ( (curTime-blockTimeD) > 7200 ) )
+                ;  // printf("REORGANIZE: An inactive chain detected -> reaorganization passed");
+                   // do nothing - debug output using printf caused a crash when run on empty database
             // otherwise do not allow timestamp shifts greater than 12 minutes
             else {
                 // "Travel in time" prevention --- never replace confirmed block by too fresh one
