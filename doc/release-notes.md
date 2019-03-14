@@ -1,6 +1,28 @@
 EarthCoin
 =============
 
+1.5.3 changes
+=============
+
+- New checkpoind added
+- Elimination of false positive virus alerts for Windows wallet
+- New stable nodes IP hardcoded
+- Build for Mac OSX released
+
+1.5.2 changes
+=============
+
+- All block extracted by attackers were marked as invalid
+- Prevention for a larg blockchain reorganization and time-travel attack
+- New checkpoints added
+- Permanent nodes IP hardcoded, no need for addnodes in the config file
+
+1.5.1 changes
+=============
+
+- A hard fork to stop mining monopoly
+- Change default port numbers to disconnect attackers
+
 1.3.4 changes
 =============
 

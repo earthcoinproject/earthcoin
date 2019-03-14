@@ -5,9 +5,9 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 1.3.4.0
+!define VERSION 1.5.3.0
 !define COMPANY "EarthCoin project"
-!define URL http://www.getearthcoin.com/
+!define URL http://www.newearthcoin.com/
 
 # MUI Symbol Definitions
 !define MUI_ICON "../share/pixmaps/bitcoin.ico"
@@ -45,7 +45,7 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile earthcoin-1.3.4-win32-setup.exe
+OutFile earthcoin-1.5.3-win32-setup.exe
 InstallDir $PROGRAMFILES\EarthCoin
 CRCCheck on
 XPStyle on
